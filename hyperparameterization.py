@@ -1,27 +1,44 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 21 16:20:48 2021
-
-@author: marianneliu
-"""
+"""Optimize CrabNet hyperparameters using Ax."""
+import pprint
 import numpy as np
 
+import gc
+import torch
+
+from ax.plot.trace import optimization_trace_single_method
+from ax.utils.notebook.plotting import render
 from ax.service.managed_loop import optimize
-from ax.utils.notebook.plotting import init_notebook_plotting
 from crabnet.train_crabnet import get_model
 from crabnet.data.materials_data import elasticity
 from crabnet.model import data
 from sklearn.metrics import mean_squared_error
 
-init_notebook_plotting()
+train_df, val_df, test_df = data(elasticity, test_size=0.1)
+# train_df = train_df[:100]
 
-train_df, val_df = data(elasticity)
-train_df = train_df[:100]
+mdl = get_model(mat_prop="elasticity", train_df=train_df, learningcurve=False)
+v_true, v_pred, _, _ = mdl.predict(val_df)
+default = mean_squared_error(v_true, v_pred, squared=False)
 
 
 def rmse_error(parameterization):
-    print(parameterization)
+    """Compute the RMSE error of a CrabNet model.
+    
+    Assumes that `train_df` and `val_df` are predefined.
+
+    Parameters
+    ----------
+    parameterization : dict
+        Dictionary of the parameters passed to `get_model()` after some slight
+        modification. 
+
+    Returns
+    -------
+    results: dict
+        Dictionary of `{"rmse": rmse}` where `rmse` is the root-mean-square error of the
+        CrabNet model.
+    """
+    pprint.pprint(parameterization)
 
     parameterization["out_hidden"] = [
         parameterization.get("out_hidden4") * 8,
@@ -64,9 +81,15 @@ def rmse_error(parameterization):
         force_cpu=False,
         **parameterization
     )
-    train_true, train_pred, formulas, train_sigma = crabnet_model.predict(train_df)
-    mse = mean_squared_error(train_true, train_pred, squared=False)
-    return {"error": mse}
+    val_true, val_pred, val_formulas, val_sigma = crabnet_model.predict(val_df)
+    rmse = mean_squared_error(val_true, val_pred, squared=False)
+
+    # deallocate CUDA memory https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/28
+    del crabnet_model
+    gc.collect()
+    torch.cuda.empty_cache()
+    results = {"rmse": rmse}
+    return results
 
 
 best_parameters, values, experiment, model = optimize(
@@ -82,11 +105,12 @@ best_parameters, values, experiment, model = optimize(
         {"name": "bias", "type": "choice", "values": [False, True]},
         {"name": "dim_feedforward", "type": "range", "bounds": [1024, 4096]},
         {"name": "dropout", "type": "range", "bounds": [0.0, 1.0]},
-        # jarvis and oliynyk don't have enough entries
+        # jarvis and oliynyk don't have enough elements
+        # ptable contains str, which isn't a handled case
         {
             "name": "elem_prop",
             "type": "choice",
-            "values": ["mat2vec", "magpie", "onehot", "ptable"],  # "jarvis", "oliynyk"
+            "values": ["mat2vec", "magpie", "onehot"],  # "jarvis", "oliynyk", "ptable"
         },
         {"name": "epochs_step", "type": "range", "bounds": [5, 20]},
         {"name": "pe_resolution", "type": "range", "bounds": [2500, 10000]},
@@ -102,15 +126,33 @@ best_parameters, values, experiment, model = optimize(
         {"name": "alpha", "type": "range", "bounds": [0.0, 1.0]},
         {"name": "k", "type": "range", "bounds": [2, 10]},
     ],
-    experiment_name="hyperparameterization",
+    experiment_name="crabnet-hyperparameter",
     evaluation_function=rmse_error,
-    objective_name="error",
+    objective_name="rmse",
     minimize=True,
     parameter_constraints=["betas1 <= betas2", "emb_scaler + pos_scaler <= 1"],
-    total_trials=20,
+    total_trials=100,
 )
 print(best_parameters)
 print(values)
+
+best_objectives = np.array(
+    [[trial.objective_mean for trial in experiment.trials.values()]]
+)
+parameter_strs = [
+    pprint.pformat(trial.arm.parameters).replace("\n", "<br>")
+    for trial in experiment.trials.values()
+]
+
+best_objective_plot = optimization_trace_single_method(
+    y=best_objectives,
+    optimum=default,
+    optimization_direction="minimize",
+    ylabel="CrabNet RMSE (GPa)",
+    hover_labels=parameter_strs,
+    plot_trial_points=True,
+)
+render(best_objective_plot)
 
 # TODO: save results
 
@@ -244,3 +286,7 @@ print(values)
 # from crabnet.utils.utils import RobustL1, RobustL2, BCEWithLogitsLoss
 # import pandas as pd
 # import torch
+
+# trial_strs = [str(trial) for trial in experiment.trials.values()]
+
+# y=np.minimum.accumulate(best_objectives, axis=1),
