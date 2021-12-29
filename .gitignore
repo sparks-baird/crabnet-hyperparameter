@@ -127,3 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+models/trained_models/elasticity.pth
+models/trained_models/DataFrame_property.pth
+figures/lc_data/elasticity_lc.csv
+figures/lc_data/DataFrame_property_lc.png
+figures/lc_data/DataFrame_property_lc.csv
