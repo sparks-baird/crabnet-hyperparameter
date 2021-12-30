@@ -14,7 +14,7 @@ from crabnet.model import data
 from sklearn.metrics import mean_squared_error
 
 train_df, val_df, test_df = data(elasticity, test_size=0.1)
-# train_df = train_df[:100]
+# train_df = train_df[:256]
 
 mdl = get_model(mat_prop="elasticity", train_df=train_df, learningcurve=False)
 v_true, v_pred, _, _ = mdl.predict(val_df)
@@ -94,7 +94,7 @@ def rmse_error(parameterization):
 
 best_parameters, values, experiment, model = optimize(
     parameters=[
-        {"name": "batch_size", "type": "range", "bounds": [8, 512]},
+        {"name": "batch_size", "type": "range", "bounds": [8, 256]},
         {"name": "fudge", "type": "range", "bounds": [0.0, 0.1]},
         {"name": "d_model", "type": "range", "bounds": [100, 1024]},
         {"name": "N", "type": "range", "bounds": [1, 10]},
@@ -136,12 +136,13 @@ best_parameters, values, experiment, model = optimize(
 print(best_parameters)
 print(values)
 
-best_objectives = np.array(
-    [[trial.objective_mean for trial in experiment.trials.values()]]
-)
+# trials = list(experiment.trials.values())[:44]
+trials = experiment.trials.values()
+
+best_objectives = np.array([[trial.objective_mean for trial in trials]])
+
 parameter_strs = [
-    pprint.pformat(trial.arm.parameters).replace("\n", "<br>")
-    for trial in experiment.trials.values()
+    pprint.pformat(trial.arm.parameters).replace("\n", "<br>") for trial in trials
 ]
 
 best_objective_plot = optimization_trace_single_method(
