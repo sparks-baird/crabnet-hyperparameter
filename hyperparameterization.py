@@ -20,7 +20,7 @@ from sklearn.model_selection import KFold
 
 from matbench.bench import MatbenchBenchmark
 
-dummy = False
+dummy = True
 if dummy:
     n_splits = 2
     total_trials = 2
@@ -292,7 +292,7 @@ for i, fold in enumerate(task.folds):
     best_objective_plot = optimization_trace_single_method(
         y=best_objectives,
         optimization_direction="minimize",
-        ylabel="CrabNet RMSE (GPa)",
+        ylabel="MAE (eV)",
         hover_labels=parameter_strs,
         plot_trial_points=True,
     )
@@ -334,7 +334,16 @@ for i, fold in enumerate(task.folds):
     fig.show()
     fig.write_html(figure_fpath + ".html")
     fig.to_json(figure_fpath + ".json")
-    fig.update_layout(legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99))
+    fig.update_layout(
+        legend=dict(
+            font=dict(size=18),
+            yanchor="top",
+            y=0.99,
+            xanchor="right",
+            x=0.99,
+            bgcolor="rgba(0,0,0,0)",
+        )
+    )
     fig, scale = matplotlibify(fig)
     fig.write_image(figure_fpath + ".png")
 
