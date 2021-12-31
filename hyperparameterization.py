@@ -20,7 +20,7 @@ from sklearn.model_selection import KFold
 
 from matbench.bench import MatbenchBenchmark
 
-dummy = True
+dummy = False
 if dummy:
     n_splits = 2
     total_trials = 2
@@ -322,7 +322,7 @@ for i, fold in enumerate(task.folds):
             y=(test_mae, test_mae),
             mode="lines",
             line={"dash": "dash"},
-            name="test MAE",
+            name="best model test MAE",
             yaxis="y1",
         )
     )
