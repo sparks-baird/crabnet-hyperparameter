@@ -1,3 +1,5 @@
 ax_platform==0.2.3
 crabnet==1.2.1
 scikit_learn==1.0.2
+matbench==0.5
+kaleido==0.2.1
