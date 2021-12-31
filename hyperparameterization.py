@@ -184,7 +184,7 @@ for i, fold in enumerate(task.folds):
 
     best_parameters, values, experiment, model = optimize(
         parameters=[
-            {"name": "batch_size", "type": "range", "bounds": [8, 256]},
+            {"name": "batch_size", "type": "range", "bounds": [32, 256]},
             {"name": "fudge", "type": "range", "bounds": [0.0, 0.1]},
             {"name": "d_model", "type": "range", "bounds": [100, 1024]},
             {"name": "N", "type": "range", "bounds": [1, 10]},
