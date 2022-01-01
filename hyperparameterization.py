@@ -240,7 +240,7 @@ for i, fold in enumerate(task.folds):
 
     # TODO: save plot, save experiment
 
-    test_inputs, test_outputs = task.get_test_data(fold)
+    test_inputs, test_outputs = task.get_test_data(fold, include_target=True)
 
     test_df = pd.DataFrame({"formula": test_inputs, "target": test_outputs})
 
@@ -335,7 +335,7 @@ for i, fold in enumerate(task.folds):
     fig.to_json(figure_fpath + ".json")
     fig.update_layout(
         legend=dict(
-            font=dict(size=18),
+            font=dict(size=16),
             yanchor="top",
             y=0.99,
             xanchor="right",
