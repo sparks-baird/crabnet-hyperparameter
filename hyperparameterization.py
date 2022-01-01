@@ -132,6 +132,7 @@ task.load()
 for i, fold in enumerate(task.folds):
     train_inputs, train_outputs = task.get_train_and_val_data(fold)
 
+    # TODO: treat train_val_df as Ax fixed_parameter
     train_val_df = pd.DataFrame(
         {"formula": train_inputs.values, "target": train_outputs.values}
     )
@@ -239,11 +240,9 @@ for i, fold in enumerate(task.folds):
 
     # TODO: save plot, save experiment
 
-    test_inputs = task.get_test_data(fold, include_target=False)
+    test_inputs, test_outputs = task.get_test_data(fold)
 
-    test_df = pd.DataFrame(
-        {"formula": test_inputs, "target": np.zeros_like(test_inputs)}
-    )
+    test_df = pd.DataFrame({"formula": test_inputs, "target": test_outputs})
 
     default_model = get_model(
         mat_prop="expt_gap",
