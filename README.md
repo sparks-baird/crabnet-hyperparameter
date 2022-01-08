@@ -6,4 +6,10 @@ Eventually, I plan to incorporate this into (my fork of) CrabNet, but for now th
 
 For more information on CrabNet's architecture, see [the original CrabNet paper published in Nature Partner Journals: Computational Materials](https://dx.doi.org/10.1038/s41524-021-00545-1).
 
-See [`hyperparameterization.ipynb`](hyperparameterization.ipynb) for a more in-depth walkthrough of the process and results.
+See [`hyperparameterization.ipynb`](https://github.com/sparks-baird/crabnet-hyperparameter/blob/main/hyperparameterization.ipynb) for a more in-depth walkthrough of the process and results.
+
+## Links
+- [figures](figures)
+- [Ax experiment JSON files](experiments)
+- [requirements.txt](requirements.txt)
+- [hyperparameterization.py](hyperparameterization.py) (`.py` script adapted into the Jupyter notebook mentioned above)
