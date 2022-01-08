@@ -1,37 +1,9 @@
-## Welcome to GitHub Pages
+# Bayesian Optimization of CrabNet Hyperparameters using Ax
 
-You can use the [editor on GitHub](https://github.com/sparks-baird/crabnet-hyperparameter/edit/main/README.md) to maintain and preview the content for your website in Markdown files.
+We use [(my fork of) CrabNet](https://github.com/sgbaird/CrabNet) to adjust various hyperparameters for the experimental band gap matbench task (`matbench_expt_gap`). We chose this task because it is a composition-only dataset (CrabNet is a composition-only model) and because CrabNet is currently (2021-01-08) listed at the top of this leaderboard (with MODNet just marginally worse). In other words, when a model whose defaults already produce state-of-the-art property prediction performance, to what extent can it benefit from hyperparameter optimization (i.e. tuning parameters such as Neural Network dimensions, learning rates, etc.).
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Eventually, I plan to incorporate this into (my fork of) CrabNet, but for now this can serve as an illustrative example of hyperparameter optimization using Bayesian adaptive design and could certainly be adapted to other models (e.g. Neural Networks), especially expensive-to-train models that have not undergone much by way of parameter tuning.
 
-### Markdown
+For more information on CrabNet's architecture, see [the original CrabNet paper published in Nature Partner Journals: Computational Materials](https://dx.doi.org/10.1038/s41524-021-00545-1).
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/sparks-baird/crabnet-hyperparameter/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+See [`hyperparameterization.ipynb`](hyperparameterization.ipynb) for a more in-depth walkthrough of the process and results.
