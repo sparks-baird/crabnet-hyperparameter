@@ -12,4 +12,4 @@ See [`hyperparameterization.ipynb`](https://github.com/sparks-baird/crabnet-hype
 - [figures](figures)
 - [Ax experiment JSON files](experiments)
 - [requirements.txt](requirements.txt)
-- [hyperparameterization.py](hyperparameterization.py) (`.py` script adapted into the Jupyter notebook mentioned above)
+- [hyperparameterization.py](https://github.com/sparks-baird/crabnet-hyperparameter/blob/main/hyperparameterization.py) (`.py` script adapted into the Jupyter notebook mentioned above)
