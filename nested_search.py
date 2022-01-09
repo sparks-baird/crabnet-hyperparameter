@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import ax.plot as plt
 from ax.plot.marginal_effects import plot_marginal_effects
-from ax.plot.feature_importances import plot_feature_importance_by_feature_plotly
+from ax.plot.feature_importances import plot_feature_importance_by_feature_plotly, plot_feature_importance_by_metric_plotly
 from ax.plot.parallel_coordinates import (
     prepare_experiment_for_plotting,
     plot_parallel_coordinates_plotly,
@@ -259,6 +259,9 @@ exp.fetch_data()
 best_parameters = best_arm2.parameters
 
 fig = plot_feature_importance_by_feature_plotly(gpei2)
+fig.show()
+
+fig = plot_feature_importance_by_metric_plotly(gpei2)
 fig.show()
 
 fig = plot_marginal_effects(gpei2, "crabnet_mae")
