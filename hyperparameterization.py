@@ -233,8 +233,6 @@ for i, fold in enumerate(task.folds):
     experiment_fpath = join(experiment_dir, "experiment" + str(i) + ".json")
     save_experiment(experiment, experiment_fpath)
 
-    # TODO: save plot, save experiment
-
     test_inputs, test_outputs = task.get_test_data(fold, include_target=True)
 
     test_df = pd.DataFrame({"formula": test_inputs, "target": test_outputs})
@@ -268,7 +266,7 @@ for i, fold in enumerate(task.folds):
     # TODO: update CrabNet predict function to allow for no target specified
     test_true, test_pred, test_formulas, test_sigma = test_model.predict(test_df)
     # rmse = mean_squared_error(val_true, val_pred, squared=False)
-    test_mae = mean_absolute_error(test_true, test_pred)
+    test_mae = mean_absolute_error(test_outputs, test_pred)
 
     # deallocate CUDA memory https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/28
     del test_model
