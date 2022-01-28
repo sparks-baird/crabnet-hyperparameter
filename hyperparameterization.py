@@ -164,7 +164,7 @@ for i, fold in enumerate(task.folds):
                 train_df=train_df,
                 learningcurve=False,
                 force_cpu=False,
-                **parameterization
+                **parameterization,
             )
             val_true, val_pred, val_formulas, val_sigma = crabnet_model.predict(val_df)
             # rmse = mean_squared_error(val_true, val_pred, squared=False)
@@ -230,7 +230,10 @@ for i, fold in enumerate(task.folds):
     print(best_parameters)
     print(values)
 
-    experiment_fpath = join(experiment_dir, "experiment" + str(i) + ".json")
+    experiment_fpath = join(
+        experiment_dir, f"total_trials_{total_trials}", "experiment" + str(i) + ".json"
+    )
+    Path(experiment_fpath).mkdir(exist_ok=True, parents=True)
     save_experiment(experiment, experiment_fpath)
 
     # TODO: save plot, save experiment
@@ -263,7 +266,7 @@ for i, fold in enumerate(task.folds):
         train_df=train_val_df,
         learningcurve=False,
         force_cpu=False,
-        **best_parameterization
+        **best_parameterization,
     )
     # TODO: update CrabNet predict function to allow for no target specified
     test_true, test_pred, test_formulas, test_sigma = test_model.predict(test_df)
@@ -293,7 +296,10 @@ for i, fold in enumerate(task.folds):
     # render(best_objective_plot)
     # plot_html = plot_config_to_html(best_objective_plot)
 
-    figure_fpath = join(figure_dir, "best_objective_plot_" + str(i))
+    figure_fpath = join(
+        figure_dir, f"total_trials_{total_trials}", "best_objective_plot_" + str(i)
+    )
+    Path(figure_fpath).mkdir(exist_ok=True, parents=True)
     # with open(figure_fpath, "w") as f:
     #     f.write(plot_html)
 
@@ -347,4 +353,4 @@ my_metadata = {"algorithm_version": crabnet.__version__}
 
 mb.add_metadata(my_metadata)
 
-mb.to_file("expt_gap_benchmark.json.gz")
+mb.to_file(f"expt_gap_benchmark_{total_trials}-trials.json.gz")
