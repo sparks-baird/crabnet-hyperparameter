@@ -1,20 +1,26 @@
+# %% imports
 from pathlib import Path
+from copy import copy
 
+import numpy as np
 import pandas as pd
 
 from matbench.bench import MatbenchBenchmark
 
 import plotly.graph_objects as go
 import plotly.express as px
-import ax.plot as plt
 from ax.plot.marginal_effects import plot_marginal_effects
-from ax.plot.feature_importances import plot_feature_importance_by_feature_plotly, plot_feature_importance_by_metric_plotly
+from ax.plot.feature_importances import (
+    plot_feature_importance_by_feature_plotly,
+    plot_feature_importance_by_metric_plotly,
+)
 from ax.plot.parallel_coordinates import (
     prepare_experiment_for_plotting,
     plot_parallel_coordinates_plotly,
 )
-from ax.plot.table_view import table_view_plot
 from ax.plot.slice import plot_slice_plotly, interact_slice_plotly
+
+import torch
 
 from ax import RangeParameter, ChoiceParameter, ParameterType, Data
 from ax.core import (
@@ -29,9 +35,15 @@ from ax.core.parameter_constraint import SumConstraint, OrderConstraint
 from ax.runners.synthetic import SyntheticRunner
 from ax.modelbridge.registry import Models
 
+import crabnet
+
+from utils.matbench import get_test_results
 from utils.parameterization import crabnet_mae
 
+# %% setup
 dummy = True
+metric = "crabnet_mae"
+
 if dummy:
     n_splits = 2
 else:
@@ -43,6 +55,9 @@ figure_dir = "figures"
 Path(experiment_dir).mkdir(parents=True, exist_ok=True)
 Path(figure_dir).mkdir(parents=True, exist_ok=True)
 
+torch.manual_seed(12345)  # To always get the same Sobol points
+
+# %% constraint parameters and constraints
 betas1 = RangeParameter(
     name="betas1", parameter_type=ParameterType.FLOAT, lower=0.5, upper=0.9999
 )
@@ -61,6 +76,7 @@ sum_constraint = SumConstraint(
 )
 parameter_constraints = [order_constraint, sum_constraint]
 
+# %% search space
 search_space = SearchSpace(
     parameters=[
         RangeParameter(
@@ -144,8 +160,7 @@ search_space = SearchSpace(
 )
 
 param_names = list(search_space.parameters.keys())
-
-
+# %% CrabNetMetric
 class CrabNetMetric(Metric):
     def __init__(self, name, train_val_df):
         self.train_val_df = train_val_df
@@ -172,6 +187,17 @@ class CrabNetMetric(Metric):
         return Data(df=pd.DataFrame.from_records(records))
 
 
+# %% matbench loop
+if dummy:
+    n_sobol = 2
+    n_gpei1 = 3
+    n_gpei2 = 3
+else:
+    n_sobol = 2 * len(search_space.parameters)
+    # n_gpei1 = max(100 - n_sobol, 0)
+    n_gpei1 = 0
+    n_gpei2 = max(100 - n_sobol, 0)  # 100
+
 mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 
 task = list(mb.tasks)[0]
@@ -186,8 +212,7 @@ for i, fold in enumerate(task.folds):
 
     optimization_config = OptimizationConfig(
         objective=Objective(
-            metric=CrabNetMetric(name="crabnet_mae", train_val_df=train_val_df),
-            minimize=True,
+            metric=CrabNetMetric(name=metric, train_val_df=train_val_df), minimize=True,
         ),
     )
     # TODO: use status_quo (Arm) as default CrabNet parameters
@@ -198,102 +223,138 @@ for i, fold in enumerate(task.folds):
         runner=SyntheticRunner(),
     )
 
-if dummy:
-    n_sobol = 2
-    n_gpei1 = 2
-    n_gpei2 = 2
-else:
-    n_sobol = 2 * len(search_space.parameters)
-    n_gpei1 = max(100 - n_sobol, 0)
-    n_gpei2 = 100
+    sobol = Models.SOBOL(exp.search_space)
+    for _ in range(n_sobol):
+        trial = exp.new_trial(generator_run=sobol.gen(1))
+        trial.run()
+        trial.mark_completed()
 
-sobol = Models.SOBOL(exp.search_space)
-for _ in range(2 * len(search_space.parameters)):
-    trial = exp.new_trial(generator_run=sobol.gen(1))
-    trial.run()
-    trial.mark_completed()
+    best_arm1 = None
+    for _ in range(n_gpei1):
+        gpei = Models.GPEI(experiment=exp, data=exp.fetch_data())
+        generator_run = gpei.gen(1)
+        best_arm1, _ = generator_run.best_arm_predictions
+        trial = exp.new_trial(generator_run=generator_run)
+        trial.run()
+        trial.mark_completed()
 
-best_arm = None
-for _ in range(n_gpei1):
-    gpei = Models.GPEI(experiment=exp, data=exp.fetch_data())
-    generator_run = gpei.gen(1)
-    best_arm, _ = generator_run.best_arm_predictions
-    trial = exp.new_trial(generator_run=generator_run)
-    trial.run()
-    trial.mark_completed()
+    n_param = len(param_names)
+    n_gpei_per_param = n_gpei2 / n_param
 
-n_param = len(param_names)
-n_gpei_per_param = n_gpei2 / n_param
-
-feature_importances = gpei.feature_importances()
-ct = 0
-fixed_params = {}
-for i in range(n_param):
-    min_importance = min(feature_importances)
-    min_index = feature_importances.index(min_importance)
-    least_important = param_names[min_index]
-    fixed_params[least_important] = best_arm.parameters[least_important]
-    fixed_features = ObservationFeatures(fixed_params)
-    if i%2 == 0:
-        n_tmp = np.ceil(n_gpei_per_param)
-    else:
-        n_tmp = np.floor(n_gpei_per_param)
-    ct = ct + n_tmp
-    # TODO: finish up hyperparameter RFE
-    for j in range(n_gpei_per_param):
-        
-    
-    
-fixed_features = ObservationFeatures({"betas1": best_arm.parameters["betas1"]})
-for _ in range(n_gpei2):
-    gpei2 = Models.GPEI(experiment=exp, data=exp.fetch_data())
-    generator_run = gpei.gen(
-        1, search_space=search_space, fixed_features=fixed_features,
+    # initialize
+    best_arm = best_arm1
+    feature_importances = gpei.feature_importances(metric)
+    # HACK: average the ChoiceParameter feature importances into a scalar
+    # https://www.kite.com/python/answers/how-to-rename-a-dictionary-key-in-python
+    feature_importances["elem_prop"] = np.mean(
+        [
+            feature_importances.pop("elem_prop_OH_PARAM__0"),
+            feature_importances.pop("elem_prop_OH_PARAM__1"),
+            feature_importances.pop("elem_prop_OH_PARAM__2"),
+        ]
     )
-    best_arm2, _ = generator_run.best_arm_predictions
-    trial = exp.new_trial(generator_run=generator_run)
-    trial.run()
-    trial.mark_completed()
+    feature_importances["criterion"] = feature_importances.pop("criterion_OH_PARAM_")
+    unfixed_importances = copy(feature_importances)
+    fixed_params = {}
+    ct = 0
+    # recursive feature elimination of hyperparameters (RFE-h)
+    for i in range(n_param):
+        # key corresponding to min value https://stackoverflow.com/a/3282904/13697228
+        least_important = min(unfixed_importances, key=unfixed_importances.get)
+        fixed_params[least_important] = best_arm.parameters[least_important]
+        fixed_features = ObservationFeatures(fixed_params)
+        unfixed_importances.pop(least_important)
+        # switch between ceil and floor for even and odd, resp.
+        if i % 2 == 0:
+            n_tmp = np.ceil(n_gpei_per_param)
+        else:
+            n_tmp = np.floor(n_gpei_per_param)
+        n_tmp = int(max(n_tmp, 1))
+        for _ in range(n_tmp):
+            ct = ct + 1
+            if ct <= n_gpei2:
+                gpei2 = Models.GPEI(experiment=exp, data=exp.fetch_data())
+                generator_run = gpei.gen(
+                    1, search_space=search_space, fixed_features=fixed_features,
+                )
+                best_arm2, _ = generator_run.best_arm_predictions
+                trial = exp.new_trial(generator_run=generator_run)
+                trial.run()
+                trial.mark_completed()
+        best_arm = best_arm2
+        # NOTE: feature_importances contains fixed features
+        feature_importances = gpei.feature_importances(metric)
 
-exp.fetch_data()
-best_parameters = best_arm2.parameters
+    exp.fetch_data()
+    best_parameters = best_arm.parameters
 
-fig = plot_feature_importance_by_feature_plotly(gpei2)
-fig.show()
+    fig = plot_feature_importance_by_feature_plotly(gpei2)
+    fig.show()
 
-fig = plot_feature_importance_by_metric_plotly(gpei2)
-fig.show()
+    fig = plot_feature_importance_by_metric_plotly(gpei2)
+    fig.show()
 
-fig = plot_marginal_effects(gpei2, "crabnet_mae")
-data = fig[0]["data"]
-layout = fig[0]["layout"]
-fig = go.Figure({"data": data, "layout": layout})
-fig.show()
+    fig = plot_marginal_effects(gpei2, metric)
+    data = fig[0]["data"]
+    layout = fig[0]["layout"]
+    fig = go.Figure({"data": data, "layout": layout})
+    fig.show()
 
-exp_df = prepare_experiment_for_plotting(exp)
-out_df = exp.fetch_data().df
-exp_df["crabnet_mae"] = out_df["mean"].values
+    exp_df = prepare_experiment_for_plotting(exp)
+    out_df = exp.fetch_data().df
+    exp_df[metric] = out_df["mean"].values
 
-# need to install stats_model for trendlines, see
-# https://www.statsmodels.org/stable/install.html
-# 1D parameter projections
-fig = px.scatter(
-    exp_df,
-    x="batch_size",
-    y="crabnet_mae",
-    trendline="lowess",
-    trendline_options=dict(frac=0.25),
-    trendline_scope="overall",
-)
-fig.show()
+    # need to install stats_model for trendlines, see
+    # https://www.statsmodels.org/stable/install.html
+    # 1D parameter projections
+    fig = px.scatter(
+        exp_df,
+        x="batch_size",
+        y=metric,
+        trendline="lowess",
+        trendline_options=dict(frac=0.25),
+        trendline_scope="overall",
+    )
+    fig.show()
 
-fig = plot_parallel_coordinates_plotly(exp)
-fig.show()
+    fig = plot_parallel_coordinates_plotly(exp)
+    fig.show()
 
-table_view_plot(exp)
+    fig = interact_slice_plotly(gpei2)
+    fig.show()
 
-fig = interact_slice_plotly(gpei2)
-fig.show()
+    test_pred, default_mae, test_mae, best_parameterization = get_test_results(
+        task, fold, best_parameters, train_val_df
+    )
+
+    task.record(fold, test_pred, params=best_parameterization)
+
+my_metadata = {"algorithm_version": crabnet.__version__}
+mb.add_metadata(my_metadata)
+mb.to_file("expt_gap_benchmark.json.gz")
+1 + 1
+
+# %% Code Graveyard
+# min_importance = min(unfixed_importances.values())
+# min_index = unfixed_importances.values().index(min_importance)
+# least_important = unfixed_importances.keys[min_index]
+
+# fixed_features = ObservationFeatures({"betas1": best_arm.parameters["betas1"]})
+# for _ in range(n_gpei2):
+#     gpei2 = Models.GPEI(experiment=exp, data=exp.fetch_data())
+#     generator_run = gpei.gen(
+#         1, search_space=search_space, fixed_features=fixed_features,
+#     )
+#     best_arm2, _ = generator_run.best_arm_predictions
+#     trial = exp.new_trial(generator_run=generator_run)
+#     trial.run()
+#     trial.mark_completed()
+
+# unfixed_importances = [
+#     feature_importances.pop(fixed_name) for fixed_name in fixed_params.keys()
+# ]
+
+# table_view_plot(exp, exp.fetch_data())
 # fig = plot_slice_plotly(gpei2, param_name="batch_size", metric_name="crabnet_mae")
 # fig.show()
-1 + 1
+
