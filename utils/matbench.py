@@ -35,6 +35,7 @@ def get_test_results(task, fold, best_parameters, train_val_df):
         train_df=train_val_df,
         learningcurve=False,
         force_cpu=False,
+        verbose=False,
         **best_parameterization
     )
     # TODO: update CrabNet predict function to allow for no target specified
