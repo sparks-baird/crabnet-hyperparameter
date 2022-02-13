@@ -8,7 +8,7 @@ from crabnet.train_crabnet import get_model
 
 
 def correct_parameterization(parameterization):
-    pprint.pprint(parameterization)
+    # pprint.pprint(parameterization)
 
     parameterization["out_hidden"] = [
         parameterization.get("out_hidden4") * 8,
@@ -80,10 +80,12 @@ def crabnet_mae(parameterization, train_val_df, n_splits=5, kf=None):
             train_df=train_df,
             learningcurve=False,
             force_cpu=False,
+            verbose=False,
             **parameterization
         )
         val_true, val_pred, val_formulas, val_sigma = crabnet_model.predict(val_df)
         # rmse = mean_squared_error(val_true, val_pred, squared=False)
+        val_pred = np.nan_to_num
         mae = mae + mean_absolute_error(val_true, val_pred)
 
         # deallocate CUDA memory https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/28
