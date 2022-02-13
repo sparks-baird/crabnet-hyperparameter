@@ -1,6 +1,8 @@
-"""Optimize CrabNet hyperparameters using Ax."""
+"""Use CrabNet default hyperparameters."""
 from os.path import join
 from pathlib import Path
+
+import numpy as np
 import pandas as pd
 
 import gc
@@ -9,7 +11,6 @@ import torch
 import crabnet
 from crabnet.train_crabnet import get_model
 from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
 
 from matbench.bench import MatbenchBenchmark
 
@@ -100,3 +101,4 @@ mb.add_metadata(my_metadata)
 mb.to_file(join(result_dir, "expt_gap_benchmark.json.gz"))
 
 print(default_maes)
+print(np.mean(default_maes))
