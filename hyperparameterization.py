@@ -20,104 +20,35 @@ from sklearn.model_selection import KFold
 
 from matbench.bench import MatbenchBenchmark
 
+from utils.parameterization import correct_parameterization, crabnet_mae
+from utils.plotting import matplotlibify
+
+verbose = False
 dummy = False
 if dummy:
     n_splits = 2
     total_trials = 2
 else:
     n_splits = 5
-    total_trials = 100
+    total_trials = 1000
 
 # create dir https://stackoverflow.com/a/273227/13697228
 experiment_dir = "experiments"
 figure_dir = "figures"
+result_dir = "results"
+
+if dummy:
+    experiment_dir = join(experiment_dir, "dummy")
+    figure_dir = join(figure_dir, "dummy")
+    result_dir = join(result_dir, "dummy")
+
+experiment_dir = join(experiment_dir, f"total_trials_{total_trials}")
+figure_dir = join(figure_dir, f"total_trials_{total_trials}")
+result_dir = join(result_dir, f"total_trials_{total_trials}")
+
 Path(experiment_dir).mkdir(parents=True, exist_ok=True)
 Path(figure_dir).mkdir(parents=True, exist_ok=True)
-
-
-def matplotlibify(fig, size=24, width_inches=3.5, height_inches=3.5, dpi=142):
-    # make it look more like matplotlib
-    # modified from: https://medium.com/swlh/formatting-a-plotly-figure-with-matplotlib-style-fa56ddd97539)
-    font_dict = dict(family="Arial", size=size, color="black")
-
-    fig.update_layout(
-        font=font_dict,
-        plot_bgcolor="white",
-        width=width_inches * dpi,
-        height=height_inches * dpi,
-        margin=dict(r=40, t=20, b=10),
-    )
-
-    fig.update_yaxes(
-        showline=True,  # add line at x=0
-        linecolor="black",  # line color
-        linewidth=2.4,  # line size
-        ticks="inside",  # ticks outside axis
-        tickfont=font_dict,  # tick label font
-        mirror="allticks",  # add ticks to top/right axes
-        tickwidth=2.4,  # tick width
-        tickcolor="black",  # tick color
-    )
-
-    fig.update_xaxes(
-        showline=True,
-        showticklabels=True,
-        linecolor="black",
-        linewidth=2.4,
-        ticks="inside",
-        tickfont=font_dict,
-        mirror="allticks",
-        tickwidth=2.4,
-        tickcolor="black",
-    )
-    fig.update(layout_coloraxis_showscale=False)
-
-    width_default_px = fig.layout.width
-    targ_dpi = 300
-    scale = width_inches / (width_default_px / dpi) * (targ_dpi / dpi)
-
-    return fig, scale
-
-
-def correct_parameterization(parameterization):
-    pprint.pprint(parameterization)
-
-    parameterization["out_hidden"] = [
-        parameterization.get("out_hidden4") * 8,
-        parameterization.get("out_hidden4") * 4,
-        parameterization.get("out_hidden4") * 2,
-        parameterization.get("out_hidden4"),
-    ]
-    parameterization.pop("out_hidden4")
-
-    parameterization["betas"] = (
-        parameterization.get("betas1"),
-        parameterization.get("betas2"),
-    )
-    parameterization.pop("betas1")
-    parameterization.pop("betas2")
-
-    d_model = parameterization["d_model"]
-
-    # make heads even (unless it's 1) (because d_model must be even)
-    heads = parameterization["heads"]
-    if np.mod(heads, 2) != 0:
-        heads = heads + 1
-    parameterization["heads"] = heads
-
-    # NOTE: d_model must be divisible by heads
-    d_model = parameterization["heads"] * round(d_model / parameterization["heads"])
-
-    parameterization["d_model"] = d_model
-
-    parameterization["pos_scaler_log"] = (
-        1 - parameterization["emb_scaler"] - parameterization["pos_scaler"]
-    )
-
-    parameterization["epochs"] = parameterization["epochs_step"] * 4
-
-    return parameterization
-
+Path(result_dir).mkdir(parents=True, exist_ok=True)
 
 mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 kf = KFold(n_splits=n_splits, shuffle=True, random_state=18012019)
@@ -134,7 +65,7 @@ for i, fold in enumerate(task.folds):
     if dummy:
         train_val_df = train_val_df[:100]
 
-    def crabnet_mae(parameterization):
+    def crabnet_mae_simple(parameterization):
         """Compute the mean absolute error of a CrabNet model.
         
         Assumes that `train_df` and `val_df` are predefined.
@@ -151,31 +82,9 @@ for i, fold in enumerate(task.folds):
             Dictionary of `{"rmse": rmse}` where `rmse` is the root-mean-square error of the
             CrabNet model.
         """
-        parameterization = correct_parameterization(parameterization)
-
-        mae = 0.0
-        for train_index, val_index in kf.split(train_val_df):
-            train_df, val_df = (
-                train_val_df.loc[train_index],
-                train_val_df.loc[val_index],
-            )
-            crabnet_model = get_model(
-                mat_prop="expt_gap",
-                train_df=train_df,
-                learningcurve=False,
-                force_cpu=False,
-                **parameterization
-            )
-            val_true, val_pred, val_formulas, val_sigma = crabnet_model.predict(val_df)
-            # rmse = mean_squared_error(val_true, val_pred, squared=False)
-            mae = mae + mean_absolute_error(val_true, val_pred)
-
-            # deallocate CUDA memory https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/28
-            del crabnet_model
-            gc.collect()
-            torch.cuda.empty_cache()
-        mae = mae / n_splits
-        results = {"mae": mae}
+        results = crabnet_mae(
+            parameterization, train_val_df, n_splits=n_splits, kf=kf, verbose=verbose
+        )
         return results
 
     best_parameters, values, experiment, model = optimize(
@@ -221,7 +130,7 @@ for i, fold in enumerate(task.folds):
             {"name": "k", "type": "range", "bounds": [2, 10]},
         ],
         experiment_name="crabnet-hyperparameter",
-        evaluation_function=crabnet_mae,
+        evaluation_function=crabnet_mae_simple,
         objective_name="mae",
         minimize=True,
         parameter_constraints=["betas1 <= betas2", "emb_scaler + pos_scaler <= 1"],
@@ -242,6 +151,7 @@ for i, fold in enumerate(task.folds):
         train_df=train_val_df,
         learningcurve=False,
         force_cpu=False,
+        verbose=verbose,
     )
 
     default_true, default_pred, default_formulas, default_sigma = default_model.predict(
@@ -261,7 +171,8 @@ for i, fold in enumerate(task.folds):
         train_df=train_val_df,
         learningcurve=False,
         force_cpu=False,
-        **best_parameterization
+        verbose=verbose,
+        **best_parameterization,
     )
     # TODO: update CrabNet predict function to allow for no target specified
     test_true, test_pred, test_formulas, test_sigma = test_model.predict(test_df)
@@ -345,4 +256,7 @@ my_metadata = {"algorithm_version": crabnet.__version__}
 
 mb.add_metadata(my_metadata)
 
-mb.to_file("expt_gap_benchmark.json.gz")
+mb.to_file(join(result_dir, "expt_gap_benchmark.json.gz"))
+
+1 + 1
+

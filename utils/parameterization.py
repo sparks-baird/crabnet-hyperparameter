@@ -7,8 +7,9 @@ from sklearn.model_selection import KFold
 from crabnet.train_crabnet import get_model
 
 
-def correct_parameterization(parameterization):
-    # pprint.pprint(parameterization)
+def correct_parameterization(parameterization, verbose=False):
+    if verbose:
+        pprint.pprint(parameterization)
 
     parameterization["out_hidden"] = [
         parameterization.get("out_hidden4") * 8,
@@ -47,7 +48,7 @@ def correct_parameterization(parameterization):
     return parameterization
 
 
-def crabnet_mae(parameterization, train_val_df, n_splits=5, kf=None):
+def crabnet_mae(parameterization, train_val_df, n_splits=5, kf=None, verbose=False):
     """Compute the mean absolute error of a CrabNet model.
     
     Assumes that `train_df` and `val_df` are predefined.
@@ -64,7 +65,7 @@ def crabnet_mae(parameterization, train_val_df, n_splits=5, kf=None):
         Dictionary of `{"rmse": rmse}` where `rmse` is the root-mean-square error of the
         CrabNet model.
     """
-    parameterization = correct_parameterization(parameterization)
+    parameterization = correct_parameterization(parameterization, verbose=verbose)
 
     if kf is None:
         kf = KFold(n_splits=n_splits, shuffle=True, random_state=18012019)
@@ -80,7 +81,7 @@ def crabnet_mae(parameterization, train_val_df, n_splits=5, kf=None):
             train_df=train_df,
             learningcurve=False,
             force_cpu=False,
-            verbose=False,
+            verbose=verbose,
             **parameterization
         )
         val_true, val_pred, val_formulas, val_sigma = crabnet_model.predict(val_df)
