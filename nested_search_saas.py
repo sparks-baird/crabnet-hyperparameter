@@ -272,7 +272,7 @@ for i, fold in enumerate(task.folds):
     test_pred, default_mae, test_mae, best_parameterization = get_test_results(
         task, fold, best_parameters, train_val_df
     )
-    maes.append(test_mae)
+    maes.append(test_mae)  # [0.32241879861870626, ...]
 
     task.record(fold, test_pred, params=best_parameterization)
 
