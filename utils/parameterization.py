@@ -86,7 +86,7 @@ def crabnet_mae(parameterization, train_val_df, n_splits=5, kf=None, verbose=Fal
         )
         val_true, val_pred, val_formulas, val_sigma = crabnet_model.predict(val_df)
         # rmse = mean_squared_error(val_true, val_pred, squared=False)
-        val_pred = np.nan_to_num
+        val_pred = np.nan_to_num(val_pred)
         mae = mae + mean_absolute_error(val_true, val_pred)
 
         # deallocate CUDA memory https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/28

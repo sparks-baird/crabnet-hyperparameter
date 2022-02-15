@@ -73,7 +73,10 @@ def matbench_fold(fold):
 
     optimization_config = OptimizationConfig(
         objective=Objective(
-            metric=CrabNetMetric(name=metric, train_val_df=train_val_df), minimize=True,
+            metric=CrabNetMetric(
+                name=metric, train_val_df=train_val_df, n_splits=n_splits
+            ),
+            minimize=True,
         ),
     )
     # TODO: use status_quo (Arm) as default CrabNet parameters
