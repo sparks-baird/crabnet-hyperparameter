@@ -15,7 +15,9 @@ class CrabNetMetric(Metric):
 
             # TODO: add timing info as optional parameter and as outcome metric
             # TODO: maybe add interval score calculation as outcome metric
-            mean = crabnet_mae(params, train_val_df=train_val_df, n_splits=n_splits)
+            mean = crabnet_mae(
+                params, train_val_df=self.train_val_df, n_splits=n_splits
+            )
 
             records.append(
                 {
