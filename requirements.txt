@@ -5,3 +5,4 @@ plotly==5.5.0
 crabnet==1.2.5
 scikit-learn==1.0.2
 submitit==1.4.1
+matbench==0.5
