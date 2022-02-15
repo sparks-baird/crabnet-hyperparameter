@@ -13,7 +13,8 @@ from utils.matbench import matbench_fold, mb, task, figure_dir
 
 log_folder = "log_test/%j"
 walltime = 60
-partition, account = ["notchpeak", "sparks"]
+# partition, account = ["notchpeak-gpu", "notchpeak-gpu"]
+partition, account = ["notchpeak-guest", "owner-guest"]
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime,
