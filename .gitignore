@@ -136,3 +136,4 @@ figures/lc_data/elasticity_lc.csv
 figures/best-objective_files/MathJax.js.download
 figures/lc_data/expt_gap_lc.csv
 models/trained_models/expt_gap.pth
+matbench_original/models/trained_models/DataFrame_property.pth
