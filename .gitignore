@@ -139,3 +139,5 @@ models/trained_models/expt_gap.pth
 matbench_original/models/trained_models/DataFrame_property.pth
 
 log_test/**
+log_ax/**
+log_matbench/**
