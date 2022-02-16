@@ -44,5 +44,3 @@ print(
     f"Waiting for submission jobs ({job_ids_str}) to complete before running collector job ({collector_job.job_id}). Use the matbench output file that will be saved to {savepath} after all jobs have run. Email will be sent with a status update by default."
 )
 
-collector_job.result()
-
