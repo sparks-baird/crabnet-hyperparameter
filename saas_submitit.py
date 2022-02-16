@@ -4,7 +4,9 @@ from submitit import AutoExecutor
 
 import cloudpickle as pickle
 
-from utils.matbench import matbench_fold, collect_results, task, savepath
+from utils.matbench import matbench_fold, collect_results, task, savepath, dummy
+
+print(f"dummy: {dummy}")
 
 # %% submission
 log_folder = "log_ax/%j"
