@@ -18,8 +18,7 @@ executor.update_parameters(
     timeout_min=walltime,
     slurm_partition=partition,
     slurm_gpus_per_task=1,
-    slurm_mail_type="ALL",
-    slurm_additional_parameters={"account": account},
+    slurm_additional_parameters={"account": account, "mail-type": "ALL"},
 )
 jobs = executor.map_array(matbench_fold, task.folds)  # sbatch array
 job_ids = [job.job_id for job in jobs]
