@@ -21,7 +21,7 @@ from utils.metrics import CrabNetMetric
 from utils.parameterization import correct_parameterization
 from utils.search import search_space
 
-dummy = True
+dummy = False
 metric = "crabnet_mae"
 
 if dummy:
