@@ -15,7 +15,7 @@ executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime,
     slurm_partition=partition,
-    slurm_additional_parameters={"account": account},
+    slurm_additional_parameters={"account": account, "mail-type": "All"},
 )
 jobs = executor.map_array(matbench_fold, task.folds)  # sbatch array
 job_ids = [job.job_id for job in jobs]
@@ -35,7 +35,6 @@ collector.update_parameters(
     slurm_additional_parameters={
         "account": account,
         "dependency": f"afterok:{job_ids_str}",
-        "mail-type": "All",
     },
 )
 collector_job = collector.submit(collect_results)  # sbatch array
