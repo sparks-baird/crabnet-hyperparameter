@@ -15,8 +15,9 @@ executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime,
     slurm_partition=partition,
-    gpus_per_task=1,
-    slurm_additional_parameters={"account": account, "mail-type": "All"},
+    slurm_gpus_per_task=1,
+    mail_type="ALL",
+    slurm_additional_parameters={"account": account},
 )
 jobs = executor.map_array(matbench_fold, task.folds)  # sbatch array
 job_ids = [job.job_id for job in jobs]
