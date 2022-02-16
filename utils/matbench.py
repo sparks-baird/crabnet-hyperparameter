@@ -3,6 +3,8 @@ from os.path import join
 from pathlib import Path
 from time import time
 
+import cloudpickle as pickle
+import crabnet
 import numpy as np
 import pandas as pd
 import torch
@@ -180,3 +182,20 @@ def get_test_results(task, fold, best_parameters, train_val_df):
     test_mae = mean_absolute_error(test_true, test_pred)
 
     return test_pred, default_mae, test_mae, best_parameterization
+
+
+# %% collection
+savepath = join(figure_dir, "expt_gap_benchmark.json.gz")
+
+
+def collect_results():
+    with open("jobs.pkl", "rb") as f:
+        jobs = pickle.load(f)
+    # concatenation
+    for i, fold in enumerate(task.folds):
+        test_pred, best_parameterization = jobs[i].result()
+        task.record(fold, test_pred, best_parameterization)
+
+    my_metadata = {"algorithm_version": crabnet.__version__}
+    mb.add_metadata(my_metadata)
+    mb.to_file(savepath)

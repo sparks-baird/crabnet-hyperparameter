@@ -1,13 +1,10 @@
 # %% imports
 # NOTE: `pip install pyro-ppl` to use FULLYBAYESIAN (SAASBO)
-from os.path import join
-
-import crabnet
 from submitit import AutoExecutor
 
 import cloudpickle as pickle
 
-from utils.matbench import matbench_fold, mb, task, figure_dir
+from utils.matbench import matbench_fold, collect_results, task, savepath
 
 # %% submission
 log_folder = "log_ax/%j"
@@ -27,22 +24,6 @@ job_ids_str = ":".join(job_ids)  # e.g. "3937257_0:3937257_1:..."
 
 with open("jobs.pkl", "wb") as f:
     pickle.dump(jobs, f)
-
-# %% collection
-savepath = join(figure_dir, "expt_gap_benchmark.json.gz")
-
-
-def collect_results():
-    with open("jobs.pkl", "rb") as f:
-        jobs = pickle.load(f)
-    # concatenation
-    for i, fold in enumerate(task.folds):
-        test_pred, best_parameterization = jobs[i].result()
-        task.record(fold, test_pred, best_parameterization)
-
-    my_metadata = {"algorithm_version": crabnet.__version__}
-    mb.add_metadata(my_metadata)
-    mb.to_file(savepath)
 
 
 collect_folder = "log_matbench/%j"
