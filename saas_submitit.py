@@ -8,7 +8,7 @@ from utils.matbench import matbench_fold, collect_results, task, savepath
 
 # %% submission
 log_folder = "log_ax/%j"
-walltime = 60
+walltime = 10
 # partition, account = ["notchpeak-gpu", "notchpeak-gpu"]
 partition, account = ["notchpeak-guest", "owner-guest"]
 executor = AutoExecutor(folder=log_folder)
@@ -41,6 +41,8 @@ collector.update_parameters(
 collector_job = collector.submit(collect_results)  # sbatch array
 
 print(
-    f"Waiting for submission jobs ({job_ids_str}) to complete before running collector job ({collector_job.job_id}). Feel free to exit and use the matbench output file that will be saved to {savepath} after all jobs have run."
+    f"Waiting for submission jobs ({job_ids_str}) to complete before running collector job ({collector_job.job_id}). Use the matbench output file that will be saved to {savepath} after all jobs have run. Email will be sent with a status update by default."
 )
+
+collector_job.result()
 
