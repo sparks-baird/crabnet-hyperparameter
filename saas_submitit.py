@@ -8,7 +8,7 @@ from utils.matbench import matbench_fold, collect_results, task, savepath
 
 # %% submission
 log_folder = "log_ax/%j"
-walltime = 4320  # 4320 min == 3 days
+walltime = 10  # 4320 min == 3 days
 partition, account = ["notchpeak-gpu", "notchpeak-gpu"]
 # partition, account = ["notchpeak-guest", "owner-guest"]
 executor = AutoExecutor(folder=log_folder)
@@ -29,7 +29,7 @@ with open("jobs.pkl", "wb") as f:
 
 
 collect_folder = "log_matbench/%j"
-walltime = 60
+walltime = 10
 collector = AutoExecutor(folder=collect_folder)
 collector.update_parameters(
     timeout_min=walltime,
