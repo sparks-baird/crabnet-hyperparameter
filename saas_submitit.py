@@ -11,7 +11,8 @@ print(f"dummy: {dummy}")
 # %% submission
 log_folder = "log_ax/%j"
 walltime = 10  # 4320 min == 3 days
-partition, account = ["notchpeak-gpu-guest", "notchpeak-gpu-guest"]
+partition, account = ["notchpeak-gpu-guest", "owner-gpu-guest"]
+# partition, account = ["notchpeak-gpu", "notchpeak-gpu"]
 # partition, account = ["notchpeak-guest", "owner-guest"]
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
