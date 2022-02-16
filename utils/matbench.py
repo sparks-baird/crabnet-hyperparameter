@@ -129,7 +129,7 @@ def matbench_fold(fold):
     exp.fetch_data()
     best_parameters = best_arm.parameters
 
-    experiment_fpath = join(experiment_dir, "experiment" + str(i) + ".json")
+    experiment_fpath = join(experiment_dir, "experiment" + str(fold) + ".json")
     save_experiment(exp, experiment_fpath)
 
     test_pred, default_mae, test_mae, best_parameterization = get_test_results(
