@@ -8,13 +8,14 @@ from utils.matbench import matbench_fold, collect_results, task, savepath
 
 # %% submission
 log_folder = "log_ax/%j"
-walltime = 10
-# partition, account = ["notchpeak-gpu", "notchpeak-gpu"]
-partition, account = ["notchpeak-guest", "owner-guest"]
+walltime = 4320  # 4320 min == 3 days
+partition, account = ["notchpeak-gpu", "notchpeak-gpu"]
+# partition, account = ["notchpeak-guest", "owner-guest"]
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime,
     slurm_partition=partition,
+    gpus_per_task=1,
     slurm_additional_parameters={"account": account, "mail-type": "All"},
 )
 jobs = executor.map_array(matbench_fold, task.folds)  # sbatch array
@@ -27,7 +28,7 @@ with open("jobs.pkl", "wb") as f:
 
 
 collect_folder = "log_matbench/%j"
-walltime = 10
+walltime = 60
 collector = AutoExecutor(folder=collect_folder)
 collector.update_parameters(
     timeout_min=walltime,
