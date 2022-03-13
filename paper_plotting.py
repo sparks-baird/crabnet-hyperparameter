@@ -276,7 +276,7 @@ for i, (experiment, test_mae) in enumerate(zip(exps, ax_maes)):
                 show=False,
             )
 
-    fig_path = path.join(figure_dir, "cross_validate_" + str(i))
+    fig_path = path.join(figure_dir, "interact_slice_" + str(i))
     fig = interact_slice_plotly(model)
     plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
 
@@ -423,7 +423,7 @@ for i, (experiment, test_mae) in enumerate(zip(exps, saas_maes)):
                 show=False,
             )
 
-    fig_path = path.join(figure_dir, "interact_slice", "cross_validate_" + str(i))
+    fig_path = path.join(figure_dir, "interact_slice_" + str(i))
     fig = interact_slice_plotly(saas)
     plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
 
