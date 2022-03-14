@@ -143,3 +143,4 @@ log_ax/**
 log_matbench/**
 jobs.pkl
 temp-plot.html
+figures/**/dummy/**
