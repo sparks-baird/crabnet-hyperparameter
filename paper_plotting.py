@@ -436,7 +436,7 @@ fig = my_plot_feature_importance_by_feature_plotly(
     model=None,
     feature_importances=avg_saas_importances,
     error_x=std_saas_importances,
-    metric_names=["mae"],
+    metric_names=["crabnet_mae"],
 )
 plot_and_save(fig_path, fig, mpl_kwargs=dict(size=12), show=False)
 1 + 1
