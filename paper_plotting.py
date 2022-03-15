@@ -427,6 +427,7 @@ for i, (experiment, test_mae) in enumerate(zip(exps, saas_maes)):
     fig = interact_slice_plotly(saas)
     plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
 
+fig_path = path.join(figure_dir, "avg_feature_importances")
 feat_df = pd.DataFrame(saas_feature_importances).T
 feat_df["mean"] = feat_df.mean(axis=1)
 feat_df["std"] = feat_df.std(axis=1)
