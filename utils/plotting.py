@@ -114,6 +114,10 @@ def my_plot_feature_importance_by_feature_plotly(
             df[importance_col] = df[importance_col].div(totals)
             df[std_col] = df[std_col].div(totals)
 
+        low_df = df[std_col]
+        low_df[low_df > df[importance_col]] = df[importance_col]
+        df[low_col] = low_df
+
         df = df.sort_values(importance_col)
         traces.append(
             go.Bar(
@@ -124,7 +128,9 @@ def my_plot_feature_importance_by_feature_plotly(
                 y=df[factor_col],
                 error_x=dict(
                     type="data",
+                    symmetric=False,
                     array=df[std_col].to_list(),
+                    arrayminus=df[low_col].to_list(),
                 ),
             )
         )
