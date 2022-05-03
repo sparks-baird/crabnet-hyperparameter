@@ -64,7 +64,7 @@ task = list(mb.tasks)[0]
 task.load()
 
 
-def matbench_fold(fold):
+def matbench_fold(fold, model_type="FULLYBAYESIAN"):
     t0 = time()
     train_inputs, train_outputs = task.get_train_and_val_data(fold)
     train_val_df = pd.DataFrame(
@@ -102,18 +102,21 @@ def matbench_fold(fold):
     new_value = np.nan
     best_so_far = np.nan
     for j in range(n_saas):
-        saas = Models.FULLYBAYESIAN(
-            experiment=exp,
-            data=exp.fetch_data(),
-            num_samples=num_samples,  # Increasing this may result in better model fits
-            warmup_steps=warmup_steps,  # Increasing this may result in better model fits
-            gp_kernel="rbf",  # "rbf" is the default in the paper, but we also support "matern"
-            torch_device=tkwargs["device"],
-            torch_dtype=tkwargs["dtype"],
-            verbose=False,  # Set to True to print stats from MCMC
-            disable_progbar=True,  # Set to False to print a progress bar from MCMC
-        )
-        generator_run = saas.gen(1)
+        if model_type == "FULLYBAYESIAN":
+            mdl = Models.FULLYBAYESIAN(
+                experiment=exp,
+                data=exp.fetch_data(),
+                num_samples=num_samples,  # Increasing this may result in better model fits
+                warmup_steps=warmup_steps,  # Increasing this may result in better model fits
+                gp_kernel="rbf",  # "rbf" is the default in the paper, but we also support "matern"
+                torch_device=tkwargs["device"],
+                torch_dtype=tkwargs["dtype"],
+                verbose=False,  # Set to True to print stats from MCMC
+                disable_progbar=True,  # Set to False to print a progress bar from MCMC
+            )
+        elif model_type == "GPEI":
+            mdl = Models.GPEI(experiment=exp, data=exp.fetch_data(), torch_device=tkwargs["device"], torch_dtype=tkwargs["dtype"])
+        generator_run = mdl.gen(1)
         best_arm, _ = generator_run.best_arm_predictions
         trial = exp.new_trial(generator_run=generator_run)
         trial.run()
