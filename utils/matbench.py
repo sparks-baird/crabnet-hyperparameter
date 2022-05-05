@@ -115,7 +115,12 @@ def matbench_fold(fold, model_type="FULLYBAYESIAN"):
                 disable_progbar=True,  # Set to False to print a progress bar from MCMC
             )
         elif model_type == "GPEI":
-            mdl = Models.GPEI(experiment=exp, data=exp.fetch_data(), torch_device=tkwargs["device"], torch_dtype=tkwargs["dtype"])
+            mdl = Models.GPEI(
+                experiment=exp,
+                data=exp.fetch_data(),
+                torch_device=tkwargs["device"],
+                torch_dtype=tkwargs["dtype"],
+            )
         generator_run = mdl.gen(1)
         best_arm, _ = generator_run.best_arm_predictions
         trial = exp.new_trial(generator_run=generator_run)
@@ -144,6 +149,11 @@ def matbench_fold(fold, model_type="FULLYBAYESIAN"):
 
     # task.record(fold, test_pred, params=best_parameterization)
 
+    return test_pred, best_parameterization
+
+
+def matbench_fold_GPEI(fold):
+    test_pred, best_parameterization = matbench_fold(fold, model_type="GPEI")
     return test_pred, best_parameterization
 
 
@@ -191,7 +201,15 @@ def get_test_results(task, fold, best_parameters, train_val_df):
 savepath = join(figure_dir, "expt_gap_benchmark.json.gz")
 
 
-def collect_results():
+def collect_results(use_saas: bool):
+    if use_saas:
+        parameter_str = join("saas", f"sobol_{n_sobol}-saas_{n_saas}")
+    else:
+        parameter_str = f"sobol_{n_sobol}-saas_{n_saas}"
+    figure_dir = join("figures", parameter_str)
+    if dummy:
+        figure_dir = join(figure_dir, "dummy")
+    Path(figure_dir).mkdir(parents=True, exist_ok=True)
     with open("jobs.pkl", "rb") as f:
         jobs = pickle.load(f)
     # concatenation
