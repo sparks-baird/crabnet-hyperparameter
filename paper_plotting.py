@@ -38,6 +38,7 @@ fpaths = [
     "results/default/expt_gap_benchmark.json.gz",
     "results/ax/expt_gap_benchmark.json.gz",
     "results/saas/expt_gap_benchmark.json.gz",
+    "results/gpei_10_90/expt_gap_benchmark.json.gz",
 ]
 
 tmp_mb = MatbenchBenchmark()
@@ -440,6 +441,155 @@ fig = my_plot_feature_importance_by_feature_plotly(
     metric_names=["crabnet_mae"],
 )
 plot_and_save(fig_path, fig, mpl_kwargs=dict(size=12), show=False)
+
+
+# %% GPEI with 10 Sobol and 90 Bayes
+
+figure_dir = "figures/gpei_10_90"
+if dummy:
+    figure_dir = path.join(figure_dir, "dummy")
+fpaths = [
+    path.join("experiments/sobol_10-gpei_90", f"experiment{i}.json") for i in range(5)
+]
+exps = [load_experiment(fpath) for fpath in fpaths]
+metric = "crabnet_mae"
+saas_feature_importances = []
+for i, (experiment, test_mae) in enumerate(zip(exps, saas_maes)):
+    trials = experiment.trials.values()
+
+    best_objectives = np.array([[trial.objective_mean for trial in trials]])
+
+    parameter_strs = [
+        pprint.pformat(trial.arm.parameters).replace("\n", "<br>") for trial in trials
+    ]
+
+    best_objective_plot = optimization_trace_single_method(
+        y=best_objectives,
+        optimization_direction="minimize",
+        ylabel="GPEI (10/90) CrabNet MAE (eV)",
+        hover_labels=parameter_strs,
+        plot_trial_points=True,
+    )
+    # render(best_objective_plot)
+    # plot_html = plot_config_to_html(best_objective_plot)
+
+    fig_path = path.join(figure_dir, "best_objective_plot_" + str(i))
+
+    data = best_objective_plot[0]["data"]
+
+    data.append(
+        go.Scatter(
+            x=(1, total_trials),
+            y=(default_mae, default_mae),
+            mode="lines",
+            line={"dash": "dash"},
+            name="default MAE",
+            yaxis="y1",
+        )
+    )
+
+    data.append(
+        go.Scatter(
+            x=(1, total_trials),
+            y=(test_mae, test_mae),
+            mode="lines",
+            line={"dash": "dash"},
+            name="best model test MAE",
+            yaxis="y1",
+        )
+    )
+
+    layout = best_objective_plot[0]["layout"]
+
+    fig = go.Figure({"data": data, "layout": layout})
+
+    # offline.plot(fig)
+    fig.write_html(fig_path + ".html")
+    fig.to_json(fig_path + ".json")
+    fig.update_layout(
+        legend=dict(
+            font=dict(size=16),
+            yanchor="top",
+            y=0.99,
+            xanchor="right",
+            x=0.99,
+            bgcolor="rgba(0,0,0,0)",
+        )
+    )
+    fig, scale = matplotlibify(fig)
+    fig.write_image(fig_path + ".png")
+
+    fpath = path.join("experiments", "experiments0.json")
+
+    saas = Models.FULLYBAYESIAN(
+        experiment=experiment,
+        data=experiment.fetch_data(),
+        num_samples=num_samples,  # Increasing this may result in better model fits
+        warmup_steps=warmup_steps,  # Increasing this may result in better model fits
+        gp_kernel="rbf",  # "rbf" is the default in the paper, but we also support "matern"
+        torch_device=tkwargs["device"],
+        torch_dtype=tkwargs["dtype"],
+        verbose=False,  # Set to True to print stats from MCMC
+        disable_progbar=False,  # Set to False to print a progress bar from MCMC
+    )
+
+    fig_path = path.join(figure_dir, "feature_importances_" + str(i))
+    saas_feature_importances.append(saas.feature_importances(metric))
+    fig = plot_feature_importance_by_feature_plotly(saas)
+    plot_and_save(fig_path, fig, mpl_kwargs=dict(size=12), show=False)
+
+    # not functional with SAAS apparently
+    # fig_path = path.join(figure_dir, "marginal_effects_" + str(i))
+    # fig = plot_marginal_effects(saas, metric)
+    # data, layout = [fig[0][nm] for nm in ["data", "layout"]]
+    # fig = go.Figure({"data": data, "layout": layout})
+    # plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=15))
+
+    fig_path = path.join(figure_dir, "cross_validate_" + str(i))
+    cv = cross_validate(saas)
+    fig = interact_cross_validation_plotly(cv)
+    fig.update_xaxes(title_text="Actual MAE (eV)")
+    fig.update_yaxes(title_text="Predicted MAE (eV)")
+    plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
+
+    fig_path = path.join(figure_dir, "slice", "slice_" + str(i))
+    param_names = experiment.parameters.keys()
+
+    if not dummy:
+        for name in param_names:
+            # skip categorical variables
+            if name in non_range_names:
+                continue
+            # don't skip range parameters
+            fig = plot_slice_plotly(saas, name, "crabnet_mae")
+            fig.update_layout(title_text="")
+            fig.update_xaxes(title_text="")
+            fig.update_yaxes(title_text="")
+            plot_and_save(
+                fig_path + f"_{name}",
+                fig,
+                mpl_kwargs=dict(width_inches=1.68, height_inches=1.68),  # for 5x5 grid
+                show=False,
+            )
+
+    fig_path = path.join(figure_dir, "interact_slice_" + str(i))
+    fig = interact_slice_plotly(saas)
+    plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
+
+fig_path = path.join(figure_dir, "avg_feature_importances")
+feat_df = pd.DataFrame(saas_feature_importances).T
+feat_df["mean"] = feat_df.mean(axis=1)
+feat_df["std"] = feat_df.std(axis=1)
+avg_saas_importances = feat_df["mean"].to_dict()
+std_saas_importances = feat_df["std"].to_dict()
+fig = my_plot_feature_importance_by_feature_plotly(
+    model=None,
+    feature_importances=avg_saas_importances,
+    error_x=std_saas_importances,
+    metric_names=["crabnet_mae"],
+)
+plot_and_save(fig_path, fig, mpl_kwargs=dict(size=12), show=False)
+
 1 + 1
 
 # %% Code Graveyard
