@@ -21,7 +21,7 @@ executor.update_parameters(
     slurm_gpus_per_task=1,
     slurm_mem_per_gpu=6000,
     slurm_cpus_per_gpu=4,
-    slurm_additional_parameters={"account": account, "mail-type": "ALL", "mail-user": "sterling.baird@icloud.com"},
+    slurm_additional_parameters={"account": account},
 )
 jobs = executor.map_array(matbench_fold, task.folds)  # sbatch array
 job_ids = [job.job_id for job in jobs]
@@ -41,13 +41,10 @@ collector.update_parameters(
     slurm_additional_parameters={
         "account": account,
         "dependency": f"afterok:{job_ids_str}",
-        "mail-type": "ALL",
-        "mail-user": "sterling.baird@icloud.com",
     },
 )
 collector_job = collector.submit(collect_results)  # sbatch array
 
 print(
-    f"Waiting for submission jobs ({job_ids_str}) to complete before running collector job ({collector_job.job_id}). Use the matbench output file that will be saved to {savepath} after all jobs have run. Email will be sent with a status update by default."
+    f"Waiting for submission jobs ({job_ids_str}) to complete before running collector job ({collector_job.job_id}). Use the matbench output file that will be saved to {savepath} after all jobs have run."
 )
-
