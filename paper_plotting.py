@@ -632,6 +632,9 @@ fig = my_plot_feature_importance_by_feature_plotly(
 )
 plot_and_save(fig_path, fig, mpl_kwargs=dict(size=12), show=False)
 
+r2_df = pd.DataFrame({"ax_r2": ax_r2s, "saas_r2": saas_r2s, "ax10-90_r2": ax2_r2s})
+r2_df.to_csv(path.join(figure_dir, "r2_scores.csv"))
+
 1 + 1
 
 # %% Code Graveyard
