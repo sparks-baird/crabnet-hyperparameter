@@ -11,6 +11,7 @@ from ax.storage.json_store.load import load_experiment
 import plotly.graph_objects as go
 from ax.plot.trace import optimization_trace_single_method
 from ax.storage.metric_registry import register_metric
+from sklearn.metrics import r2_score
 import torch
 from utils.metrics import CrabNetMetric
 from utils.plotting import matplotlibify, my_plot_feature_importance_by_feature_plotly
@@ -141,6 +142,8 @@ tkwargs = {
 
 torch.manual_seed(12345)  # To always get the same Sobol points
 
+xref = 0.05
+yref = 0.95
 
 register_metric(metric_cls=CrabNetMetric)
 
@@ -164,6 +167,7 @@ fpaths = [path.join("experiments/ax", f"experiment{i}.json") for i in range(5)]
 exps = [load_experiment(fpath) for fpath in fpaths]
 metric = "mae"
 ax_feature_importances = []
+ax_r2s = []
 for i, (experiment, test_mae) in enumerate(zip(exps, ax_maes)):
     trials = experiment.trials.values()
 
@@ -256,6 +260,18 @@ for i, (experiment, test_mae) in enumerate(zip(exps, ax_maes)):
         fig_path = path.join(figure_dir, "cross_validate_" + str(i))
         cv = cross_validate(model)
         fig = interact_cross_validation_plotly(cv)
+        y_act = fig["data"][1].x
+        y_pred = fig["data"][1].y
+        r2 = r2_score(y_act, y_pred)
+        ax_r2s.append(r2)
+        fig.add_annotation(
+            text=f"r2={r2:.2f}",
+            xref="paper",
+            yref="paper",
+            x=xref,
+            y=yref,
+            showarrow=False,
+        )
         fig.update_xaxes(title_text="Actual MAE (eV)")
         fig.update_yaxes(title_text="Predicted MAE (eV)")
         plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
@@ -306,6 +322,7 @@ fpaths = [
 exps = [load_experiment(fpath) for fpath in fpaths]
 metric = "crabnet_mae"
 saas_feature_importances = []
+saas_r2s = []
 for i, (experiment, test_mae) in enumerate(zip(exps, saas_maes)):
     trials = experiment.trials.values()
 
@@ -400,6 +417,18 @@ for i, (experiment, test_mae) in enumerate(zip(exps, saas_maes)):
     fig_path = path.join(figure_dir, "cross_validate_" + str(i))
     cv = cross_validate(saas)
     fig = interact_cross_validation_plotly(cv)
+    y_act = fig["data"][1].x
+    y_pred = fig["data"][1].y
+    r2 = r2_score(y_act, y_pred)
+    saas_r2s.append(r2)
+    fig.add_annotation(
+        text=f"r2={r2:.2f}",
+        xref="paper",
+        yref="paper",
+        x=xref,
+        y=yref,
+        showarrow=False,
+    )
     fig.update_xaxes(title_text="Actual MAE (eV)")
     fig.update_yaxes(title_text="Predicted MAE (eV)")
     plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
@@ -454,6 +483,7 @@ fpaths = [
 exps = [load_experiment(fpath) for fpath in fpaths]
 metric = "crabnet_mae"
 saas_feature_importances = []
+ax2_r2s = []
 for i, (experiment, test_mae) in enumerate(zip(exps, saas_maes)):
     trials = experiment.trials.values()
 
@@ -548,6 +578,18 @@ for i, (experiment, test_mae) in enumerate(zip(exps, saas_maes)):
     fig_path = path.join(figure_dir, "cross_validate_" + str(i))
     cv = cross_validate(saas)
     fig = interact_cross_validation_plotly(cv)
+    y_act = fig["data"][1].x
+    y_pred = fig["data"][1].y
+    r2 = r2_score(y_act, y_pred)
+    ax2_r2s.append(r2)
+    fig.add_annotation(
+        text=f"r2={r2:.2f}",
+        xref="paper",
+        yref="paper",
+        x=xref,
+        y=yref,
+        showarrow=False,
+    )
     fig.update_xaxes(title_text="Actual MAE (eV)")
     fig.update_yaxes(title_text="Predicted MAE (eV)")
     plot_and_save(fig_path, fig, mpl_kwargs=dict(width_inches=4.0), show=False)
