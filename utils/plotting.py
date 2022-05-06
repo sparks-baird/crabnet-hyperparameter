@@ -6,6 +6,7 @@ import plotly.graph_objs as go
 from ax.modelbridge import ModelBridge
 from ax.plot.helper import compose_annotation
 from ax.utils.common.logger import get_logger
+from sklearn.metrics import r2_score
 
 logger = get_logger(__name__)
 
@@ -176,4 +177,19 @@ def my_plot_feature_importance_by_feature_plotly(
 
     fig = go.Figure(data=traces, layout=layout)
 
+    return fig
+
+
+def add_r2(fig, xref=0.05, yref=0.95):
+    y_act = fig["data"][1].x
+    y_pred = fig["data"][1].y
+    r2 = r2_score(y_act, y_pred)
+    fig.add_annotation(
+        text=f"r2={r2:.2f}",
+        xref="paper",
+        yref="paper",
+        x=xref,
+        y=yref,
+        showarrow=False,
+    )
     return fig
