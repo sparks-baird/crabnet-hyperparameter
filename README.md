@@ -18,7 +18,7 @@ Eventually, I plan to incorporate this into (my fork of) CrabNet, but for now th
 
 ## Citing
 If you find this useful, please consider citing:
-> Baird, S. G.; Liu, M.; Sparks, T. D. High-Dimensional Bayesian Optimization of Hyperparameters for an Attention-Based Network to Predict Materials Property: A Case Study on CrabNet Using Ax and SAASBO. [arXiv:2203.12597](https://doi.org/10.48550/arXiv.2203.12597) [cond-mat] 2022.
+> Baird, S. G.; Liu, M.; Sparks, T. D. High-Dimensional Bayesian Optimization of 23 Hyperparameters over 100 Iterations for an Attention-Based Network to Predict Materials Property: A Case Study on CrabNet Using Ax Platform and SAASBO. Computational Materials Science 2022, 211, 111505. https://doi.org/10.1016/j.commatsci.2022.111505.
 
 In addition to the above manuscript citation, if you use this code, please also cite the following for all versions (alternatively, a [specific version](https://zenodo.org/badge/latestdoi/431324974)):
 > Sterling Baird, sgbaird-alt, & mliu7051. (2022). sparks-baird/crabnet-hyperparameter. Zenodo. https://doi.org/10.5281/zenodo.6355044
