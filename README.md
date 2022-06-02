@@ -1,6 +1,6 @@
 # Bayesian Optimization of CrabNet Hyperparameters using Ax
 
-[![DOI](https://zenodo.org/badge/431324974.svg)](https://zenodo.org/badge/latestdoi/431324974)
+[![DOI](https://img.shields.io/badge/Zenodo-10.5281/fzenodo.6355044-blue)](https://doi.org/10.5281/zenodo.6355044) [![DOI](https://img.shields.io/badge/ComMatSci-10.1016/j.commatsci.2022.111505-green)](https://doi.org/10.1016/j.commatsci.2022.111505) [![arXiv](https://img.shields.io/badge/arXiv-2203.12597-b31b1b.svg)](https://doi.org/10.48550/arXiv.2203.12597)
 
 We use [Ax Bayesian optimization](https://ax.dev/docs/bayesopt.html) to adjust hyperparameters for [(my fork of) CrabNet](https://github.com/sgbaird/CrabNet) for the experimental band gap matbench task (`matbench_expt_gap`). We chose this task because it is a composition-only dataset (CrabNet is a composition-only model) and because CrabNet is currently (2021-01-08) listed at the top of this leaderboard (with MODNet just marginally worse). In other words, when a model whose defaults already produce state-of-the-art property prediction performance, to what extent can it benefit from hyperparameter optimization (i.e. tuning parameters such as Neural Network dimensions, learning rates, etc.)?
 
