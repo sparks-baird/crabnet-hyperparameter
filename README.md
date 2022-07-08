@@ -22,3 +22,6 @@ If you find this useful, please consider citing:
 
 In addition to the above manuscript citation, if you use this code, please also cite the following for all versions (alternatively, a [specific version](https://zenodo.org/badge/latestdoi/431324974)):
 > Sterling Baird, sgbaird-alt, & mliu7051. (2022). sparks-baird/crabnet-hyperparameter. Zenodo. https://doi.org/10.5281/zenodo.6355044
+
+## Future Work
+"Optimizing Training Trajectories in Variational Autoencoders via Latent Bayesian Optimization Approach" (https://arxiv.org/abs/2207.00128). It would be interesting to see whether Bayesian optimization across a latent space of hyperparameters or SAASBO would be more efficient for various problems. Of course, SAASBO is a type of BO, too, so technically SAASBO could be used to explore the hyperparameter latent space as well.
